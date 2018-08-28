@@ -3,7 +3,7 @@ const path = require('path');
 const slsw = require('serverless-webpack');
 
 module.exports = {
-  entry: slsw.lib.entries,
+  entry: './handler.js',
   target: 'node',
   module: {
     loaders: [{
@@ -16,6 +16,6 @@ module.exports = {
   output: {
     libraryTarget: 'commonjs',
     path: path.join(__dirname, '.webpack'),
-    filename: '[name].js',
+    filename: 'handler.js',
   },
 };

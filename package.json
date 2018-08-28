@@ -15,5 +15,11 @@
     "webpack": "^3.3.0"
   },
   "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ask-sdk-core": "^2.0.7",
+    "ask-sdk-model": "^1.5.0",
+    "axios": "^0.18.0",
+    "moment": "^2.22.2"
+  }
 }
