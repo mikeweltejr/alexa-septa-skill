@@ -20,6 +20,10 @@
     "ask-sdk-core": "^2.0.7",
     "ask-sdk-model": "^1.5.0",
     "axios": "^0.18.0",
-    "moment": "^2.22.2"
+    "google-spreadsheet": "^2.0.5",
+    "googleapis": "^27.0.0",
+    "googleapis-async": "^2.0.0",
+    "moment": "^2.22.2",
+    "xml2js": "^0.4.19"
   }
 }

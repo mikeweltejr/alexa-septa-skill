@@ -1,6 +1,10 @@
 import { SkillBuilders } from 'ask-sdk-core';
 import axios from 'axios';
 import moment from 'moment';
+import fs from 'fs';
+import GoogleSpreadsheet from 'google-spreadsheet';
+import util from 'util';
+import { parseString } from 'xml2js';
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -76,6 +80,44 @@ const SeptaIntentHandler = {
   },
 };
 
+const SeptaTweetsIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'SeptaTweetsIntent';
+
+  },
+  async handle(handlerInput) {
+    const content = fs.readFileSync('./alexa-septa-skill-credentials.json');
+
+    const credentials = JSON.parse(content);
+    const doc = new GoogleSpreadsheet('1ZX4Vrz3Zmi24NXBhCGhL-mfaaHgaO8448S1zGbNwcL8');
+    const setUpServiceAccount = util.promisify(doc.useServiceAccountAuth);
+    await setUpServiceAccount(credentials);
+
+    const getSpreadsheetInfo = util.promisify(doc.getInfo);
+    const info = await getSpreadsheetInfo();
+    
+    const sheet = info.worksheets[0];
+    const getRows = util.promisify(sheet.getRows);
+    const rows = await getRows({ offset: 1, limit: 3, orderby: 'datetime', reverse: true });
+    
+    const parseXml = util.promisify(parseString);
+    let speechText = '';
+    rows.forEach(async (row) => {
+      const result = await parseXml(row._xml);
+      if (result.entry['gsx:datetime'].length > 0 && result.entry['gsx:tweet'].length > 0) {
+        speechText += `On ${result.entry['gsx:datetime'][0]}, Septa tweeted, ${result.entry['gsx:tweet'][0]}  `;
+        handlerInput.responseBuilder
+            .speak(speechText)
+            .getResponse();
+      } 
+    });
+    return handlerInput.responseBuilder
+      .speak('Come back for more tweets later!')
+      .getResponse();
+  },
+};
+
 const HelpIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -136,6 +178,6 @@ const ErrorHandler = {
 const skillBuilder = SkillBuilders.custom();
 
 export const handler = skillBuilder
-  .addRequestHandlers(LaunchRequestHandler, SeptaIntentHandler, HelpIntentHandler, CancelAndStopIntentHandler, SessionEndedRequestHandler)
+  .addRequestHandlers(LaunchRequestHandler, SeptaIntentHandler, SeptaTweetsIntentHandler, HelpIntentHandler, CancelAndStopIntentHandler, SessionEndedRequestHandler)
   .addErrorHandlers(ErrorHandler)
   .lambda();
